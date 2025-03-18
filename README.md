@@ -116,6 +116,14 @@ About refactoring, the `match` expression used in this update is a significant r
 
 At this stage, the server now listens for connections on localhost:7878, parses the HTTP request line, responds with "hello.html" and 200 OK for requests to "/", responds with "404.html" and 404 NOT FOUND for all other paths, but still maintains a single-threaded processing model.
 
+# Milestone 4: Simulation slow response
+
+In this milestone, I've simulated the web server to respond with slow responses for specific routes. This demonstrates how a single-threaded server handles concurrent requests when one request takes a significant amount of time to process.
+
+The updated handle_connection() function now handles a new route /sleep that deliberately delays the response by 10 seconds, by using thread::sleep() to simulate a slow operation (like a complex database query or API call). Therefore, it demonstrates the blocking nature of single-threaded servers.
+
+The server works this way because it uses a single thread that processes connections sequentially from the listener.incoming() iterator, while the thread can only handle one connection at a time. The current connection must complete (including any delays) before the next one starts, and the thread::sleep() simulates a CPU-bound or I/O-bound operation that takes time to complete. This behavior accurately represents how many simple servers behaved historically and highlights why more sophisticated concurrency models were developed.
+
 
 
 
