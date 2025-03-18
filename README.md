@@ -1,6 +1,7 @@
 # Redirect:
 
 - [Milestone 1](#milestone-1-single-threaded-web-server)
+- [Milestone 2](#milestone-2-returning-html)
 
 # Milestone 1: Single threaded web server
 
@@ -58,3 +59,21 @@ This function does the following:
 3. Finally, `println!("Request: {:#?}", http_request)` prints the HTTP request headers with pretty formatting (`{:#?}`)
 
 At this stage, the server simply receives and prints HTTP requests without sending any responses, processes connections sequentially (single-threaded), has minimal error handling (uses `unwrap()` which will crash the program on errors), and doesn't parse or route requests based on paths or methods.
+
+# Milestone 2: Returning HTML
+
+![Commit 2 screen capture](/assets/images/commit2.png)
+
+At this milestone, the updated `handle_connection()` function now creates an HTTP response with a status line, headers, and HTML content. Then the server constructs a proper HTTP response to the client with:
+
+1. Status line `(HTTP/1.1 200 OK)`
+2. `Content-Length` header to indicate the size of the response body
+3. Two CRLF sequences `(\r\n\r\n)` to separate headers from body
+4. HTML content from a file
+
+The server now reads HTML content from a file named "hello.html" using `fs::read_to_string()` and then the `stream.write_all()` method sends the complete response back to the client.
+
+At this stage, the server always returns a 200 OK response regardless of the request, only serves a single HTML file ("hello.html"), and still processes connections sequentially (single-threaded).
+
+
+
