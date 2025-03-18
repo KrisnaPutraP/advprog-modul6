@@ -75,5 +75,49 @@ The server now reads HTML content from a file named "hello.html" using `fs::read
 
 At this stage, the server always returns a 200 OK response regardless of the request, only serves a single HTML file ("hello.html"), and still processes connections sequentially (single-threaded).
 
+# Milestone 3: Validating request and selectively responding
+
+![Commit 3 screen capture](/assets/images/commit3.png)
+
+In this milestone, I've enhanced the web server to validate incoming requests and respond selectively with appropriate content. The server now also returns proper 404 error pages for invalid routes.
+
+The updated `handle_connection()` function now extracts only the first line of the request (the request line), then uses pattern matching to determine the appropriate response. It makes the server serves different HTML files based on the request path.
+
+For improvements, I've done several things:
+
+1. Instead of collecting all HTTP headers, the code now extract only the request line using `buf_reader.lines().next()` which contains the HTTP method, path, and version.
+2. Using Rust's match expression to determine the response based on the request path:
+- For requests to the root path (`GET / HTTP/1.1`), we return a 200 OK with "hello.html"
+- For all other requests, we return a 404 NOT FOUND with "404.html"
+3. Different HTML files are served based on the request, providing appropriate user feedback
+
+
+About refactoring, the `match` expression used in this update is a significant refactoring from the traditional if-else approach. Here's why this refactoring is beneficial:
+
+1. Without the refactoring, we would need to repeat similar code blocks for each condition:
+
+```rust
+    if request_line == "GET / HTTP/1.1" {
+        status_line = "HTTP/1.1 200 OK";
+        filename = "hello.html";
+    } else {
+        status_line = "HTTP/1.1 404 NOT FOUND";
+        filename = "404.html";
+    }
+```
+
+2. The match expression ensures all variables are properly initialized for all possible cases, which the Rust compiler can verify
+
+3. Using a tuple to return multiple values from the match expression is more elegant and reduces the chance of inconsistency between related variables
+
+4. Adding new routes and responses becomes cleaner and requires less code as we only need to add new match arms without duplicating the response generation logic
+
+5. This approach allows us to use immutable variables (`let` without `mut`), which is preferred in Rust for safer concurrency and clearer code intention
+
+At this stage, the server now listens for connections on localhost:7878, parses the HTTP request line, responds with "hello.html" and 200 OK for requests to "/", responds with "404.html" and 404 NOT FOUND for all other paths, but still maintains a single-threaded processing model.
+
+
+
+
 
 
