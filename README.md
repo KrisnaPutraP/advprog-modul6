@@ -2,6 +2,9 @@
 
 - [Milestone 1](#milestone-1-single-threaded-web-server)
 - [Milestone 2](#milestone-2-returning-html)
+- [Milestone 3](#milestone-3-validating-request-and-selectively-responding)
+- [Milestone 4](#milestone-4-simulation-slow-response)
+- [Milestone 5](#milestone-5-multithreaded-server)
 
 # Milestone 1: Single threaded web server
 
@@ -123,6 +126,16 @@ In this milestone, I've simulated the web server to respond with slow responses 
 The updated handle_connection() function now handles a new route /sleep that deliberately delays the response by 10 seconds, by using thread::sleep() to simulate a slow operation (like a complex database query or API call). Therefore, it demonstrates the blocking nature of single-threaded servers.
 
 The server works this way because it uses a single thread that processes connections sequentially from the listener.incoming() iterator, while the thread can only handle one connection at a time. The current connection must complete (including any delays) before the next one starts, and the thread::sleep() simulates a CPU-bound or I/O-bound operation that takes time to complete. This behavior accurately represents how many simple servers behaved historically and highlights why more sophisticated concurrency models were developed.
+
+# Milestone 5: Multithreaded Server
+
+In this milestone, I've transformed the server into a multithreaded application using a thread pool implementation. This addresses the performance limitations identified in the previous commit by allowing concurrent request handling.
+
+The thread pool implementation creates a fixed number of worker threads that process incoming connections concurrently. When initialized with `ThreadPool::new(4)`, the system establishes four independent worker threads that remain active throughout the server's lifecycle. The main thread manages incoming connections and distributes work through an MPSC (Multiple Producer, Single Consumer) channel. This channel is protected by a combination of Arc (Atomic Reference Counter) and Mutex (Mutual Exclusion) to enable thread-safe access. Each worker thread continuously polls this channel for incoming jobs, processes them, and then returns to an available state. When a connection arrives, it is encapsulated as a closure and transmitted to the worker pool via the `execute()` method.
+
+This architecture significantly improves server performance by enabling parallel request processing. The server can handle multiple client connections simultaneously, up to the number of worker threads in the pool. When processing a time-intensive request (such as the `/sleep` endpoint which introduces a 10-second delay), only one worker thread is occupied while the others remain available to process additional requests. This eliminates the head-of-line blocking problem present in single-threaded servers, where all requests are processed sequentially regardless of their individual processing time requirements.
+
+For implementation, I've created a new lib.rs file implementing a `ThreadPool` design pattern. The main server code has been updated to create a thread pool with 4 worker threads and submitting connection handling as jobs to the thread pool, which causes it to process requests concurrently.
 
 
 
