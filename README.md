@@ -5,6 +5,7 @@
 - [Milestone 3](#milestone-3-validating-request-and-selectively-responding)
 - [Milestone 4](#milestone-4-simulation-slow-response)
 - [Milestone 5](#milestone-5-multithreaded-server)
+- [Bonus](#bonus)
 
 # Milestone 1: Single threaded web server
 
@@ -136,6 +137,11 @@ The thread pool implementation creates a fixed number of worker threads that pro
 This architecture significantly improves server performance by enabling parallel request processing. The server can handle multiple client connections simultaneously, up to the number of worker threads in the pool. When processing a time-intensive request (such as the `/sleep` endpoint which introduces a 10-second delay), only one worker thread is occupied while the others remain available to process additional requests. This eliminates the head-of-line blocking problem present in single-threaded servers, where all requests are processed sequentially regardless of their individual processing time requirements.
 
 For implementation, I've created a new lib.rs file implementing a `ThreadPool` design pattern. The main server code has been updated to create a thread pool with 4 worker threads and submitting connection handling as jobs to the thread pool, which causes it to process requests concurrently.
+
+# Bonus
+
+In this bonus improvement, I've implemented a `build` function in the ThreadPool implementation that represents a more robust alternative to the `new` constructor. While both functions create a ThreadPool with worker threads, they differ significantly in their error handling approaches. The `new` function uses assert! to panic if invalid parameters are provided (like a zero-sized pool), following Rust's convention that constructors named "new" should not fail. In contrast, the `build` function returns a `Result<ThreadPool, PoolCreationError>`, allowing calling code to handle creation failures gracefully rather than causing program termination.
+
 
 
 
